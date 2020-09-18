@@ -1,0 +1,11 @@
+[package]
+name = "mcmonarch_bot"
+version = "0.1.0"
+authors = ["Alexander Launi <alex.launi@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+color-eyre = "0.5.4"
+simplecrypt = "1.0.1"
+tokio = { version = "0.2", features = ["full"] }
+serenity = { version = "0.9.0-rc.1", default-features = false, features = ["client", "gateway", "rustls_backend", "model"] }

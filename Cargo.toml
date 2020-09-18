@@ -1,0 +1,7 @@
+[workspace]
+
+members = [
+    "mcmonarch",
+    "mcmonarch_bot",
+    "mcmonarch_web",
+]
