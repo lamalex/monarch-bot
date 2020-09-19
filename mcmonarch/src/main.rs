@@ -1,20 +1,15 @@
-
-use dotenv::dotenv;
-use std::env;
 use color_eyre::{eyre, eyre::Result};
-
-use tokio::sync::mpsc;
+use dotenv::dotenv;
 use futures::try_join;
+use futures::future::FutureExt;
+use std::{env, net::SocketAddrV4};
 
 use mcmonarch_bot;
 use mcmonarch_web;
 
-use std::net::SocketAddrV4;
-
 const WEB_IP_ENVVAR: &'static str = "MCMONARCH_WEB_PORT";
 const WEB_PORT_ENVVAR: &'static str = "MCMONARCH_WEB_IP";
 const BOT_TOKEN_ENVVAR: &'static str = "MCMONARCH_DISCORD_TOKEN";
-
 
 #[actix_web::main]
 pub async fn main() -> Result<()> {
@@ -28,10 +23,9 @@ pub async fn main() -> Result<()> {
     let web_addr = format!("{}:{}", web_port, web_ip)
         .parse::<SocketAddrV4>()?;
 
-    let (tx, rx) = mpsc::unbounded_channel::<String>();
-
-    let bot_fut = mcmonarch_bot::get_bot(&bot_token, rx);
-    let web_fut = mcmonarch_web::get_web(web_addr, tx);
+    let verify_box = Box::new(|data| mcmonarch_bot::McmonarchBot::verify(data).boxed()); 
+    let bot_fut = mcmonarch_bot::get_bot(&bot_token);
+    let web_fut = mcmonarch_web::get_web(web_addr,  verify_box);
     
     try_join!(bot_fut, web_fut)
         .map(|_| ())
