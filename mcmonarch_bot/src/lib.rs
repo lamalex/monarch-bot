@@ -39,7 +39,7 @@ impl<'a> Email<'a> {
         let api_key = env::var("MCMONARCH_MAIL_API_KEY")?;
 
         reqwest::Client::new()
-            .post("https://api.mailgun.net/v3/sandboxf623066ae65145e8b08901e5539d90c6.mailgun.org/messages")
+            .post("https://api.mailgun.net/v3/mg.odu-cs-community.codes/messages")
             .basic_auth("api", Some(api_key))
             .form(self)
             .send()
