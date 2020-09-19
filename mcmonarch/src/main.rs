@@ -1,104 +1,39 @@
 
-use actix_web::{get, App, Error, HttpResponse, HttpServer};
-use bytes::Bytes;
-use futures::future::ok;
-use futures::stream::once;
 use dotenv::dotenv;
 use std::env;
+use color_eyre::{eyre, eyre::Result};
 
+use tokio::sync::mpsc;
 use futures::try_join;
 
-use serenity::{
-    async_trait,
-    model::{channel::Message, gateway::Ready},
-    prelude::*,
-};
+use mcmonarch_bot;
+use mcmonarch_web;
 
-use warp::Filter;
-struct Handler;
+use std::net::SocketAddrV4;
 
-#[async_trait]
-impl EventHandler for Handler {
-    // Set a handler for the `message` event - so that whenever a new message
-    // is received - the closure (or function) passed will be called.
-    //
-    // Event handlers are dispatched through a threadpool, and so multiple
-    // events can be dispatched simultaneously.
-    async fn message(&self, ctx: Context, msg: Message) {
-        if msg.content == "!ping" {
-            // Sending a message can fail, due to a network error, an
-            // authentication error, or lack of permissions to post in the
-            // channel, so log to stdout when some error happens, with a
-            // description of it.
-            if let Err(why) = msg.channel_id.say(&ctx.http, "Pong!").await {
-                println!("Error sending message: {:?}", why);
-            }
-        }
-    }
+const WEB_IP_ENVVAR: &'static str = "MCMONARCH_WEB_PORT";
+const WEB_PORT_ENVVAR: &'static str = "MCMONARCH_WEB_IP";
+const BOT_TOKEN_ENVVAR: &'static str = "MCMONARCH_DISCORD_TOKEN";
 
-    // Set a handler to be called on the `ready` event. This is called when a
-    // shard is booted, and a READY payload is sent by Discord. This payload
-    // contains data like the current user's guild Ids, current user data,
-    // private channels, and more.
-    //
-    // In this case, just print what the current user's username is.
-    async fn ready(&self, _: Context, ready: Ready) {
-        println!("{} is connected!", ready.user.name);
-    }
-}
 
 #[actix_web::main]
-async fn main() {
+pub async fn main() -> Result<()> {
     dotenv().ok();
-    let warp_fut = get_warp();
-    let bot_gut = get_bot();
-    let actix_fut = get_actix();
-    try_join!(warp_fut, bot_gut, actix_fut).unwrap();
+    pretty_env_logger::init();
+    color_eyre::install()?;
 
-}
+    let bot_token = env::var(BOT_TOKEN_ENVVAR)?;
+    let web_ip = env::var(WEB_IP_ENVVAR)?;
+    let web_port = env::var(WEB_PORT_ENVVAR)?;
+    let web_addr = format!("{}:{}", web_port, web_ip)
+        .parse::<SocketAddrV4>()?;
 
-#[get("/stream")]
-async fn stream() -> HttpResponse {
-    let body = once(ok::<_, Error>(Bytes::from_static(b"test")));
+    let (tx, rx) = mpsc::unbounded_channel::<String>();
 
-    HttpResponse::Ok()
-        .content_type("application/json")
-        .streaming(body)
-}
-
-async fn get_actix() -> Result<(), String> {
-    HttpServer::new(|| App::new().service(stream))
-        .bind("127.0.0.1:8080")
-        .map_err(|_| String::from("actix could not bind"))?
-        .run()
-        .await
-        .map(|_| ())
-        .map_err(|_| String::from("actix done goofed"))
-        
-}
-
-async fn get_warp() -> Result<(), String> {
-    // GET /hello/warp => 200 OK with body "Hello, warp!"
-    let hello = warp::path!("hello" / String)
-        .map(|name| format!("Hello, {}!", name));
-
-    warp::serve(hello)
-        .run(([127, 0, 0, 1], 3030))
-        .await;
-    Ok(())
-}
-
-async fn get_bot() -> Result<(), String> {
-    let token = env::var("DISCORD_TOKEN")
-        .expect("Expected a token in the environment");
-
-    // Create a new instance of the Client, logging in as a bot. This will
-    // automatically prepend your bot token with "Bot ", which is a requirement
-    // by Discord for bot users.
-    let mut client = Client::new(&token)
-        .event_handler(Handler)
-        .await
-        .expect("Err creating client");
+    let bot_fut = mcmonarch_bot::get_bot(&bot_token, rx);
+    let web_fut = mcmonarch_web::get_web(web_addr, tx);
     
-    client.start().await.map(|_| ()).map_err(|_| String::from("bot failed"))
+    try_join!(bot_fut, web_fut)
+        .map(|_| ())
+        .map_err(|e| eyre::eyre!(e))
 }

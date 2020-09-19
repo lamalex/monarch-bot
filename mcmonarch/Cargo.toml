@@ -5,6 +5,12 @@ authors = ["Alexander Launi <alex.launi@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+actix-web = "3"
+futures = "0.3.5"
 dotenv = "0.15.0"
 color-eyre = "0.5.4"
-futures = "0.3.5"
+pretty_env_logger = "0.4"
+tokio = { version = "0.2", features = ["full"] }
+
+mcmonarch_bot = { path = "../mcmonarch_bot" }
+mcmonarch_web = { path = "../mcmonarch_web" }

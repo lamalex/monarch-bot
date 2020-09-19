@@ -5,7 +5,16 @@ authors = ["Alexander Launi <alex.launi@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+log = "0.4.11"
+regex = "1.3.9"
+futures = "0.3.5"
+reqwest = "0.10.8"
 color-eyre = "0.5.4"
+validator = "0.11.0"
 simplecrypt = "1.0.1"
 tokio = { version = "0.2", features = ["full"] }
-serenity = { version = "0.9.0-rc.1", default-features = false, features = ["client", "gateway", "rustls_backend", "model"] }
+tokio-test = "0.2.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serenity = { version = "0.9.0-rc.1", default-features = false, features = ["cache", "client", "gateway", "rustls_backend", "model", "utils"] }
+dotenv = "0.15.0"

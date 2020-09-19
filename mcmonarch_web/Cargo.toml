@@ -8,5 +8,6 @@ edition = "2018"
 
 [dependencies]
 actix-web = "3"
+futures = "0.3.5"
 color-eyre = "0.5.4"
 tokio = { version = "0.2", features = ["full"] }
