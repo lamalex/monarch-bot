@@ -27,9 +27,9 @@ impl<'a> Email<'a> {
         let vars_ser = serde_json::to_string(&vars).map_err(|e| eyre::eyre!(e))?;
         
         Ok(Self {
-            from: "Mailgun Sandbox <postmaster@sandboxf623066ae65145e8b08901e5539d90c6.mailgun.org>",
+            from: "CS @ ODU Discord <postmaster@mg.odu-cs-community.codes>",
             to,
-            subject: "CS @ ODU Discord -- verify your email",
+            subject: "Verify your email",
             template: "odu-cs-monarch-verify",
             variables: vars_ser,
         })
