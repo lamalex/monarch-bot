@@ -134,11 +134,6 @@ impl EventHandler for Handler {
             Please make sure you review the #rules. This channel is for ODU students only. \n \
             Could I have your @odu email address and we can get you verified?";
 
-        // REMOVE: for development only
-        if new_member.display_name().into_owned() != String::from("imsorrybutthisisatestacct") {
-            return 
-        }
-
         let _ = new_member.user.direct_message(&ctx, |m| {
             let msg = MessageBuilder::new()
                 .push(":wave: ")
