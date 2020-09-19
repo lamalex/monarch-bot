@@ -8,7 +8,7 @@ use mcmonarch_bot;
 use mcmonarch_web;
 
 const WEB_IP_ENVVAR: &'static str = "MCMONARCH_WEB_IP";
-const WEB_PORT_ENVVAR: &'static str = "MCMONARCH_WEB_PORT";
+const WEB_PORT_ENVVAR: &'static str = "PORT";
 const BOT_TOKEN_ENVVAR: &'static str = "MCMONARCH_DISCORD_TOKEN";
 
 #[actix_web::main]
