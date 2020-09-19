@@ -21,7 +21,7 @@ pub async fn main() -> Result<()> {
     let bot_token = env::var(BOT_TOKEN_ENVVAR)?;
     let web_ip = env::var(WEB_IP_ENVVAR)?;
     let web_port = env::var(WEB_PORT_ENVVAR)?;
-
+    println!("FOR DEBUGGING {}:{}", web_ip, web_port);
     let web_addr = format!("{}:{}", web_ip, web_port)
         .parse::<SocketAddrV4>()?;
 
