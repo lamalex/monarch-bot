@@ -111,7 +111,8 @@ impl EventHandler for Handler {
                     }
                     _ => {
                         let _ = msg.reply(&ctx, 
-                            ":ok_hand: Check your email. I'm sending a verification link to that address."
+                            ":ok_hand: Check your email. I'm sending a verification link to that address. \n \
+                            (check your spam if it doesn't show up)"
                         ).await;
                     }
                 };  
