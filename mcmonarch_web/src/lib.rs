@@ -1,10 +1,11 @@
-use actix_web::{get, web, App, Result, HttpServer, HttpResponse, Responder};
+use actix_files::NamedFile;
+use actix_web::{get, web, App, Result, HttpServer};
 use color_eyre::eyre;
 use futures::Future;
-use std::{net::ToSocketAddrs, pin::Pin};
+use std::{path::PathBuf, net::ToSocketAddrs, pin::Pin};
 
 #[get("/verify/{payload}")]
-async fn check(payload: web::Path<String>, data: web::Data<AppStateCbWithAsyncFn>) -> impl Responder 
+async fn check(payload: web::Path<String>, data: web::Data<AppStateCbWithAsyncFn>) -> actix_web::Result<NamedFile> 
 {
     let inner = payload.into_inner();
     
@@ -16,7 +17,8 @@ async fn check(payload: web::Path<String>, data: web::Data<AppStateCbWithAsyncFn
     let verify = &data.as_ref().cb;
     let _ =  verify(bytes).await;
     
-    HttpResponse::Ok()
+    let path = PathBuf::from("mcmonarch_web/static/index.html");
+    Ok(NamedFile::open(path)?)
 }
 
 struct AppStateCbWithAsyncFn {
