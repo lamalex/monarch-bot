@@ -19,9 +19,11 @@ async fn check(payload: web::Path<String>, data: web::Data<AppStateCbWithAsyncFn
         .map_err(|e| error::ErrorInternalServerError(e))?;
 
     let verify = &data.as_ref().cb;
-    let _ =  verify(bytes).await;
+    let path =  match verify(bytes).await {
+        Ok(_) => PathBuf::from("mcmonarch_web/static/verified.html"),
+        Err(_) => PathBuf::from("mcmonarch_web/static/failed.html")
+    };
     
-    let path = PathBuf::from("mcmonarch_web/static/index.html");
     Ok(NamedFile::open(path)?)
 }
 
