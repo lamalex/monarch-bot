@@ -19,26 +19,35 @@ async fn check(
     data: web::Data<VerificationCallback>,
 ) -> actix_web::Result<NamedFile> {
     let inner = payload.into_inner();
-
-    let bytes =
-        delimited_string_try_into_vec(&inner, ",").map_err(error::ErrorInternalServerError)?;
-
-    let verify = data.as_ref();
-    let path = match verify(bytes).await {
-        Ok(_) => PathBuf::from("mcmonarch_web/static/verified.html"),
-        Err(_) => PathBuf::from("mcmonarch_web/static/failed.html"),
-    };
+    let verify = data.get_ref();
+    let path = inner_check(&inner, verify)
+        .await
+        .map_err(error::ErrorInternalServerError)?;
 
     Ok(NamedFile::open(path)?)
 }
 
-/// Converts a string of FromStrs delimited by `delimiter` into a Vec<T>.
+async fn inner_check(data: &str, verify: &VerificationCallback) -> eyre::Result<PathBuf> {
+    let bytes = delimited_string_try_into_vec(data, ",")?;
+
+    Ok(match verify(bytes).await {
+        Ok(_) => PathBuf::from("mcmonarch_web/static/verified.html"),
+        Err(_) => PathBuf::from("mcmonarch_web/static/failed.html"),
+    })
+}
+
+/// Converts a non-empty string of FromStrs delimited by `delimiter` into a Vec<T>.
 /// Gives an error if any fail to parse.
 /// Strips empty terminal element if string ends with `delimiter`.
+/// Errors on empty input, or if input is not parsable to T
 fn delimited_string_try_into_vec<T>(input: &str, delimiter: &str) -> eyre::Result<Vec<T>>
 where
     T: std::str::FromStr,
 {
+    if input.is_empty() {
+        return Err(eyre::eyre!("input must have at least 1 element"));
+    }
+
     input
         .split_terminator(delimiter)
         .map(|v| {
@@ -54,6 +63,7 @@ pub async fn get_web(
     verify_cb: VerificationCallback,
 ) -> eyre::Result<()> {
     let async_data = web::Data::new(verify_cb);
+
     HttpServer::new(move || App::new().app_data(async_data.clone()).service(check))
         .disable_signals()
         .bind(addr)
@@ -67,13 +77,14 @@ pub async fn get_web(
 #[cfg(test)]
 mod test {
     use super::*;
+    use futures::future::FutureExt;
 
     #[test]
     fn convert_cds_to_vec() {
-        let expected: Vec<u8> = "Hi my name is Dingus".into();
-        let input: String = expected.iter().map(|&b| format!("{},", b)).collect();
+        let expected = "Hi my name is dingus";
+        let input = make_valid_u8_vec_string(expected);
         assert_eq!(
-            expected,
+            Vec::<u8>::from(expected),
             delimited_string_try_into_vec::<u8>(&input, ",").unwrap()
         );
     }
@@ -83,5 +94,30 @@ mod test {
         let start: Vec<u8> = "me amo es dingus".into();
         let input: String = start.iter().map(|&b| format!(",{},", b)).collect();
         assert!(delimited_string_try_into_vec::<u8>(&input, ",").is_err());
+    }
+
+    #[test]
+    fn convert_cds_rejects_empty() {
+        let input = make_valid_u8_vec_string("");
+        assert!(delimited_string_try_into_vec::<u8>(&input, ",").is_err());
+    }
+
+    #[test]
+    fn check_calls_verify_with_expected() {
+        async fn test_verify(data: Vec<u8>) -> eyre::Result<()> {
+            Ok(assert_eq!(Vec::<u8>::from("je m'appele dingus"), data))
+        }
+
+        let input = make_valid_u8_vec_string("je m'appele dingus");
+        let cb: VerificationCallback = Box::new(|data| test_verify(data).boxed());
+
+        assert!(tokio_test::block_on(inner_check(&input, &cb)).is_ok());
+    }
+
+    fn make_valid_u8_vec_string(input: &str) -> String {
+        Vec::<u8>::from(input)
+            .iter()
+            .map(|b| format!("{},", b))
+            .collect()
     }
 }

@@ -14,3 +14,4 @@ actix-http = "2.0"
 futures = "0.3.5"
 color-eyre = "0.5.4"
 tokio = { version = "0.2", features = ["full"] }
+tokio-test = "0.2.1"
