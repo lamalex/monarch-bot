@@ -5,7 +5,7 @@ use futures::try_join;
 use std::{env, net::SocketAddrV4};
 
 const WEB_IP_ENVVAR: &str = "MCMONARCH_WEB_IP";
-const WEB_PORT_ENVVAR: &str = "PORT";
+const WEB_PORT_ENVVAR: &str = "MCMONARCH_WEB_PORT";
 const BOT_TOKEN_ENVVAR: &str = "MCMONARCH_DISCORD_TOKEN";
 
 #[actix_web::main]
