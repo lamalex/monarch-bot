@@ -1,8 +1,7 @@
 language: rust
-  - 1.45.2
 cache: cargo
 rust:
-  - stable
+  - 1.45.2
 before_cache: |
   cargo install cargo-tarpaulin
 before_script:
