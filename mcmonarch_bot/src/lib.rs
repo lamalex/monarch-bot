@@ -25,7 +25,7 @@ impl EventHandler for McmonarchBot {
             .to(Email::extract_odu_email(&msg.content))
             .with_var("uid", &msg.author.id.to_string())
             .build();
-        
+
         match email {
             Ok(email) => ...,
             Err(InvalidEmailAddr) => ...,
@@ -44,14 +44,14 @@ impl EventHandler for McmonarchBot {
                 match email.send().await {
                     Ok(res) if res.status() == reqwest::StatusCode::OK => {
                         let _ = msg
-                        .reply(
-                            &ctx,
-                            ":ok_hand: \
+                            .reply(
+                                &ctx,
+                                ":ok_hand: \
                         Check your email. I'm sending a verification link to that address. \n \
                         (check your spam if it doesn't show up)",
-                        )
-                        .await;
-                    },
+                            )
+                            .await;
+                    }
                     Ok(res) => {
                         self.reply_on_email_problem(&ctx, msg).await;
                         log::warn!("{}", res.status());
@@ -146,12 +146,14 @@ impl McmonarchBot {
 
     async fn reply_on_email_problem(&self, ctx: &Context, msg: Message) {
         let reply = MessageBuilder::new()
-            .push_line(":fire_engine: Uh-oh \n \
+            .push_line(
+                ":fire_engine: Uh-oh \n \
                 Something went wrong sending your verification email. \n \
-                Try again later maybe? If this keeps happening file an issue on gitlab.")
+                Try again later maybe? If this keeps happening file an issue on gitlab.",
+            )
             .push_named_link(
-                "CS @ ODU Meta gitlab", 
-                "https://git-community.cs.odu.edu/community-discord/meta/-/issues/new"
+                "CS @ ODU Meta gitlab",
+                "https://git-community.cs.odu.edu/community-discord/meta/-/issues/new",
             )
             .build();
 

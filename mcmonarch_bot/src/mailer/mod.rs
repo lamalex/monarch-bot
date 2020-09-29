@@ -16,11 +16,12 @@ pub struct Email {
 impl Email {
     pub fn new(to: &str, vars: EmailVariables) -> eyre::Result<Self> {
         let vars_ser = serde_json::to_string(&vars).map_err(|e| eyre::eyre!(e))?;
-        
+
         let to = match Self::extract_odu_email(to) {
             Some(email) => Ok(email),
-            None => Err(eyre::eyre!("{} was not a valid ODU email", to))
-        }?.to_owned();
+            None => Err(eyre::eyre!("{} was not a valid ODU email", to)),
+        }?
+        .to_owned();
 
         Ok(Self {
             from: "CS @ ODU Discord <postmaster@mg.odu-cs-community.codes>",
