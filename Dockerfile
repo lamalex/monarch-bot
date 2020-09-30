@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 # Cargo Build Stage
 # ------------------------------------------------------------------------------
-FROM rust:latest as cargo-build
+FROM rust:1.45.2 as cargo-build
 RUN USER=root cargo new --bin monarchy_mcmonarch_bot
 WORKDIR ./monarchy_mcmonarch_bot
 RUN USER=root cargo new --bin mcmonarch
