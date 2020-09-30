@@ -1,0 +1,7 @@
+.env
+.git
+default.profraw
+target/
+**/target/
+.DS_Store
+

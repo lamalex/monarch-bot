@@ -31,8 +31,8 @@ async fn inner_check(data: &str, verify: &VerificationCallback) -> eyre::Result<
     let bytes = delimited_string_try_into_vec(data, ",")?;
 
     Ok(match verify(bytes).await {
-        Ok(_) => PathBuf::from("mcmonarch_web/static/verified.html"),
-        Err(_) => PathBuf::from("mcmonarch_web/static/failed.html"),
+        Ok(_) => PathBuf::from("static/verified.html"),
+        Err(_) => PathBuf::from("static/failed.html"),
     })
 }
 
