@@ -15,9 +15,9 @@ pub async fn main() -> Result<()> {
     color_eyre::install()?;
 
     let bot_token = env::var(BOT_TOKEN_ENVVAR)?;
-    let web_ip = env::var(WEB_IP_ENVVAR).unwrap_or("0.0.0.0".to_string());
+    let web_ip = env::var(WEB_IP_ENVVAR).unwrap_or_else(|_| "0.0.0.0".to_string());
     let web_port = env::var(WEB_PORT_ENVVAR)
-        .unwrap_or("3030".to_string())
+        .unwrap_or_else(|_| "3030".to_string())
         .parse::<u32>()?;
 
     let web_addr = TcpListener::bind(format!("{}:{}", web_ip, web_port))?;
