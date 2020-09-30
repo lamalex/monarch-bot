@@ -2,7 +2,7 @@ use color_eyre::{eyre, eyre::Result};
 use dotenv::dotenv;
 use futures::future::FutureExt;
 use futures::try_join;
-use std::{env, net::SocketAddrV4};
+use std::{env, net::TcpListener};
 
 const WEB_IP_ENVVAR: &str = "MCMONARCH_WEB_IP";
 const WEB_PORT_ENVVAR: &str = "MCMONARCH_WEB_PORT";
@@ -18,7 +18,7 @@ pub async fn main() -> Result<()> {
     let web_ip = env::var(WEB_IP_ENVVAR)?;
     let web_port = env::var(WEB_PORT_ENVVAR)?;
 
-    let web_addr = format!("{}:{}", web_ip, web_port).parse::<SocketAddrV4>()?;
+    let web_addr = TcpListener::bind(format!("{}:{}", web_ip, web_port))?;
 
     let verify_box = Box::new(|data| mcmonarch_bot::McmonarchBot::verify(data).boxed());
     let bot_fut = mcmonarch_bot::get_bot(&bot_token);
