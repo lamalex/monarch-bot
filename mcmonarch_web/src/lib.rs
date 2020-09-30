@@ -1,9 +1,9 @@
 use actix_files::NamedFile;
 use actix_http::error;
-use actix_web::{get, web, App, HttpServer, Result};
+use actix_web::{dev::Server, get, web, App, HttpResponse, HttpServer, Result};
 use color_eyre::eyre;
 use futures::future::BoxFuture;
-use std::{net::ToSocketAddrs, path::PathBuf};
+use std::{net::TcpListener, path::PathBuf};
 
 type VerificationCallback =
     Box<dyn Sync + Send + Fn(Vec<u8>) -> BoxFuture<'static, eyre::Result<()>>>;
@@ -57,21 +57,34 @@ where
         .collect::<Result<Vec<T>, _>>()
 }
 
-/// Returns a future that returns a Result<()> for the running webserver.
-pub async fn get_web(
-    addr: impl ToSocketAddrs,
-    verify_cb: VerificationCallback,
-) -> eyre::Result<()> {
-    let async_data = web::Data::new(verify_cb);
+/// Web server health check API call for remote monitoring
+async fn heartbeat() -> HttpResponse {
+    HttpResponse::Ok().finish()
+}
 
-    HttpServer::new(move || App::new().app_data(async_data.clone()).service(check))
-        .disable_signals()
-        .bind(addr)
-        .map_err(|e| eyre::eyre!(e))?
-        .run()
+/// Returns a future that returns a Result<()> for the running webserver.
+pub async fn get_web(listener: TcpListener, verify_cb: VerificationCallback) -> eyre::Result<()> {
+    run(listener, verify_cb)?
         .await
         .map(|_| ())
         .map_err(|e| eyre::eyre!(e))
+}
+
+pub fn run(listener: TcpListener, verify_cb: VerificationCallback) -> eyre::Result<Server> {
+    let async_data = web::Data::new(verify_cb);
+
+    let server = HttpServer::new(move || {
+        App::new()
+            .app_data(async_data.clone())
+            .service(check)
+            .route("/heartbeat", web::get().to(heartbeat))
+    })
+    .disable_signals()
+    .listen(listener)
+    .map_err(|e| eyre::eyre!(e))?
+    .run();
+
+    Ok(server)
 }
 
 #[cfg(test)]
