@@ -18,7 +18,8 @@ script: |
   cargo clippy -- -D warnings &&
   cargo build &&
   cargo test &&
-  cargo audit
+  cargo audit &&
+  docker build -t alexlauni/monarchy-mcmonarch-face -f Dockerfile .
 after_success: |
   cargo tarpaulin --ignore-tests
 
@@ -27,3 +28,4 @@ deploy:
   script: bash docker_push.sh
   on:
     branch: main
+
